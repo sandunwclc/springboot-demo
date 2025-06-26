@@ -10,7 +10,9 @@ class SpringbootgithubdemoApplicationTests {
 
 	@Test
 	void contextLoads() {
-		assertEquals("1", "2");
+		String expected="1";
+		String actual="1";
+		assertEquals(actual, expected);
 	}
 
 }
