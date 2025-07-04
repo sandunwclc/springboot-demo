@@ -28,6 +28,7 @@ pipeline {
         
         stage('Build') {
             steps {
+				sh 'echo "sandun...................................."'
                 sh 'chmod +x mvnw'
                 sh 'mvn clean package -DskipTests'
             }
