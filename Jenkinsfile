@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "springboot-demo:latest"
+        MINIKUBE_ENV = "eval \$(minikube docker-env)"
     }
 
     stages {
-        
         stage('Clean workspace') {
             steps {
                 deleteDir()
@@ -26,9 +26,18 @@ pipeline {
             }
         }
         
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                ${MINIKUBE_ENV}
+                docker build -t springboot-demo:latest .
+                '''
+            }
+        }
+        
         stage('Build') {
             steps {
-				sh 'echo "sandun...................................."'
+				sh 'echo "Build sandun...................................."'
                 sh 'chmod +x mvnw'
                 sh 'mvn clean package -DskipTests'
             }
@@ -42,21 +51,20 @@ pipeline {
             }
         }
 
-       stage('Run Container') {
-    steps {
-        sh '''
-        if [ "$(docker ps -aq -f name=springboot-demo)" ]; then
-            docker stop springboot-demo
-            docker rm springboot-demo
-        else
-            echo "No existing springboot-demo container found."
-        fi
-
-        docker run -d --name springboot-demo -p 8082:8080 springboot-demo:latest
-        '''
-    }
-}
-
+        stage('Run Container') {
+		    steps {
+		        sh '''
+		        if [ "$(docker ps -aq -f name=springboot-demo)" ]; then
+		            docker stop springboot-demo
+		            docker rm springboot-demo
+		        else
+		            echo "No existing springboot-demo container found."
+		        fi
+		
+		        docker run -d --name springboot-demo -p 8082:8080 springboot-demo:latest
+		        '''
+		    }
+		}
     }
 }
   
