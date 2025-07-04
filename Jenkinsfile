@@ -26,15 +26,6 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
-            steps {
-                sh '''
-                ${MINIKUBE_ENV}
-                docker build -t springboot-demo:latest .
-                '''
-            }
-        }
-        
         stage('Build') {
             steps {
 				sh 'echo "Build sandun...................................."'
