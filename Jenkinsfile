@@ -1,43 +1,61 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'M3'
-    }
-
     environment {
-        IMAGE_NAME = "springboot-demo"
+        DOCKER_IMAGE = "springboot-demo:latest"
     }
 
     stages {
-        stage('Clone') {
+        
+        stage('Clean workspace') {
             steps {
-                git 'https://github.com/sandunwclc/springboot-demo.git'
+                deleteDir()
+            }
+        }
+        
+        stage('Checkout') {
+            steps {
+                checkout([
+                  $class: 'GitSCM',
+                  branches: [[name: '*/main']],
+                  userRemoteConfigs: [[
+                    url: 'https://github.com/sandunwclc/springboot-demo',
+                    credentialsId: 'github-creds'
+                  ]]
+                ])
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'chmod +x mvnw'
+                sh './mvnw clean package -DskipTests'
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}")
+                }
             }
         }
 
-        stage('Build with Maven') {
-            steps {
-                sh 'mvn clean package -DskipTests'
-            }
-        }
+       stage('Run Container') {
+    steps {
+        sh '''
+        if [ "$(docker ps -aq -f name=springboot-demo)" ]; then
+            docker stop springboot-demo
+            docker rm springboot-demo
+        else
+            echo "No existing springboot-demo container found."
+        fi
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t $IMAGE_NAME .'
-            }
-        }
-
-        stage('Run Docker Image') {
-            steps {
-                sh 'docker run --rm -d -p 8081:8080 --name app $IMAGE_NAME'
-            }
-        }
-    }
-
-    post {
-        always {
-            sh 'docker stop app || true'
-        }
+        docker run -d --name springboot-demo -p 8082:8080 springboot-demo:latest
+        '''
     }
 }
+
+    }
+}
+  
